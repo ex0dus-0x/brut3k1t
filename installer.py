@@ -109,5 +109,6 @@ while True:
         break
     elif getos == "4":
         osx_build()
+        break
     else:
         continue
