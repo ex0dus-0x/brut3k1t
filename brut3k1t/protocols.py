@@ -27,6 +27,7 @@ import smtplib
 import paramiko
 import ftplib
 import telnetlib
+import xmpp
 
 class ProtocolBruteforce:
     def __init__(self, service, address, username, wordlist, port, delay):
@@ -170,7 +171,7 @@ class ProtocolBruteforce:
 
     def xmppBruteforce(self, address, username, wordlist, port, delay):
         wordlist = open(wordlist, 'r')
-        client = Client(str(address))
+        client = xmpp.client.Client(str(address))
         client.connect(server=(str(address), port))
         for i in wordlist.readlines():
             password = i.strip("\n")
