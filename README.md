@@ -1,11 +1,11 @@
-<span align="center">
-# brute
-</span>
+<p align="center">
+    <h1> brute </h1>
+    <a href="https://github.com/ex0dus-0x/brute/issues"><img src="https://img.shields.io/github/issues/ex0dus-0x/brute.svg" alt="Github forks"></img></a>
+    <a href="https://raw.githubusercontent.com/ex0dus-0x/brute/master/LICENSE.md"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="License"></img></a>
 
-[![GitHub forks](https://img.shields.io/github/forks/ex0dus-0x/brute.svg)](https://github.com/ex0dus-0x/brut3k1t/network)
-[![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg)](https://raw.githubusercontent.com/ex0dus-0x/brute/master/LICENSE.md)
+</p>
 
-__brute__ is a crowd-sourced credential stuffing engine built for security professionals
+Crowd-sourced credential stuffing engine built for security professionals
 
 ## Introduction
 
