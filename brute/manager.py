@@ -12,10 +12,10 @@ import pathlib
 import importlib
 import typing as t
 
-from brute.core import base
+from brute.core.base import BruteBase
 
 # type alias to the main module tree
-Modules = t.Dict[str, t.Dict[str, t.Type[base.BruteBase]]]
+Modules = t.Dict[str, t.Dict[str, t.Type[BruteBase]]]
 
 
 class BruteManager(object):
@@ -24,7 +24,7 @@ class BruteManager(object):
     """
 
     @staticmethod
-    def _parse_mods(modtype: str) -> t.Dict[str, t.Type[base.BruteBase]]:
+    def _parse_mods(modtype: str) -> t.Dict[str, t.Type[BruteBase]]:
         """
         Helper method for parsing out all the modules with a BruteBase grandparent
         class given a specific module type.
@@ -43,25 +43,32 @@ class BruteManager(object):
         #print(pkg_dir)
 
         # modules to return
-        mods: t.Dict[str, t.Type[base.BruteBase]] = {}
+        mods: t.Dict[str, t.Type[BruteBase]] = {}
 
         # get all modules with a BruteBase parent class
         for (_, mod, _) in pkgutil.iter_modules([pkg_dir]):
 
             # initialize submodule name to inspect
             modname = f"{namespace}.{mod}"
+            #print(modname)
+
             module = importlib.import_module(modname)
 
             # look through all attributes, and return only the plugin
-            # with the base.BruteBase grandparent subclass
+            # with the BruteBase grandparent subclass
             for name in dir(module):
                 attribute = getattr(module, name)
 
                 # check if class, and if the grandparent type is BruteBase
                 if inspect.isclass(attribute):
-                    grandparent = attribute.__bases__[0].__bases__[0]
-                    if grandparent is base.BruteBase:
-                        mods[attribute.name] = attribute
+
+                    # TODO: make better!
+                    try:
+                        grandparent = attribute.__bases__[0].__bases__[0]
+                        if grandparent is BruteBase:
+                            mods[attribute.name] = attribute
+                    except IndexError:
+                        pass
 
         return mods
 
@@ -74,7 +81,7 @@ class BruteManager(object):
         # initializes a mapping for each module type to each module name and instance
         self.modules: Modules = dict(
             map(lambda x: (x, BruteManager._parse_mods(x)),
-            ["web", "protocol", "misc"]
+            ["web", "protocol"]
         ))
 
         # total number of modules, for returning stats
@@ -91,7 +98,8 @@ class BruteManager(object):
         for t, entries in self.modules.items():
             stat_str += f"  {t.capitalize()} Modules:\n"
             for k, _ in entries.items():
-                stat_str += f"\t* {k}\n"
+                stat_str += f"    * {k}\n"
+            stat_str += "\n"
         return stat_str
 
 
@@ -103,17 +111,17 @@ class BruteManager(object):
         return self.modules.keys()
 
 
-    def get_module(self, modtype: str, name: str) -> t.Optional[t.Type[base.BruteBase]]:
+    def get_module(self, name: str) -> t.Optional[t.Type[BruteBase]]:
         """
         Given a name, find the corresponding module in the existing mapping. Return None if
         it doesn't exist.
 
-        :type modtype: module type to find exact module in
         :type name: name of module to find
         """
-        for n, mod in self.modules[modtype].items():
-            if n == name:
-                return mod
+        for _, mods in self.modules.items():
+            for n, mod in mods.items():
+                if n == name:
+                    return mod
 
         return None
 
@@ -123,6 +131,7 @@ class BruteManager(object):
         Initializes a new plugin module script, but does not add to the existing mapping to
         local registry and plugin folder.
         """
+        pass
 
 
     def add_module(self, path):
@@ -130,4 +139,5 @@ class BruteManager(object):
         Given a plugin module path, attempt to dynamically import it, and add it to existing mapping
         to local registry and plugin folder.
         """
+        self.modules[modtype][name] = {}
         pass

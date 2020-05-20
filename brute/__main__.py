@@ -19,10 +19,11 @@ def main():
     print("""
   _                _   _____
  | |__  _ __ _   _| |_|___ /
- | "_ \| "__| | | | __| |_ \
+ | "_ \| "__| | | | __| |_ \/
  | |_) | |  | |_| | |_ ___) |
  |_.__/|_|   \__,_|\__|____/
-    security-oriented bruteforce/credential stuffing framework.
+
+    crowd-sourced bruteforce/credential stuffing framework.
 """)
 
     parser = argparse.ArgumentParser(description="Security-oriented bruteforce/credential-stuffing framework")
@@ -30,7 +31,7 @@ def main():
     # defines the module management argument group to interact with attack modules.
     module = parser.add_argument_group("Module Management")
     module.add_argument(
-        "--list_modules", dest="list_modules",
+        "--list_modules", action="store_true",
         help="List out the currently available modules in the local registry."
     )
     module.add_argument(
@@ -46,15 +47,15 @@ def main():
     attack = parser.add_argument_group("Launching an Attack")
     attack.add_argument(
         "-m", "--module", dest="module",
-        help="Provide a valid username/hashstring for service/protocol/hashcrack being executed."
+        help="Provide a valid module to be executed."
     )
     attack.add_argument(
         "-u", "--username", dest="username",
-        help="Provide a valid username/hashstring for service/protocol/hashcrack being executed"
+        help="Provide a valid username/identifier for module being executed"
     )
     attack.add_argument(
         "-w", "--wordlist", dest="wordlist",
-        help="Provide a wordlist or directory to a wordlist"
+        help="Provide a file path or directory to a wordlist"
     )
     attack.add_argument(
         "-a", "--address", dest="address",
@@ -62,7 +63,7 @@ def main():
     )
     attack.add_argument(
         "-p", "--port", type=int, dest="port",
-        help="Provide port for host address for specified service. If not specified, will be automatically set"
+        help="Provide port for host address for specified service. If not specified, will be automatically set as default."
     )
     attack.add_argument(
         "-d", "--delay", type=int, dest="delay", default=5,
@@ -116,11 +117,13 @@ def main():
     if _module is None:
         logger.error("[!] No module found with name `{}`".format(args.module))
 
-    # initialize module with parameters and run
+    # initialize module with all parameters and run. Assume generic type and
+    # use all arg params, let object figure it out.
     module = _module(
+        address=args.address,
         username=args.username,
         wordlist=args.wordlist,
-        delay=args.delay
+        delay=args.delay,
     )
     module.run()
 

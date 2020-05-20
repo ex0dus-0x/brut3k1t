@@ -6,54 +6,107 @@ web.py
     arbitrarily implemented for any URL endpoint doing authentication.
 """
 
+import time
+import bs4
 import mechanize
-import selenium
 import dataclasses
+import argparse
 import typing as t
 
-from brute.core import base
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+from selenium.webdriver.common.keys import Keys
+
+from brute.core.base import BruteBase, BruteException
+
+# type alias for HTTP params
+Params = dataclasses.InitVar[t.Dict[str, t.Optional[str]]]
 
 
 @dataclasses.dataclass
-class WebBruteforce(base.BruteBase):
+class WebBruteforce(BruteBase):
     """
     Parent bruteforce object inherting from base in order
     to extend functionality for attacking HTTP/HTTPs-based web services.
     """
 
-    # represents the base URL endpoint being targeted, without any appended parameters
-    url: str = dataclasses.field(default_factory=str)
-
     # represents any key-value parameters needed to work with the endpoint. Should NOT include
     # the username and password field, which should appear seperate in the fields parameter.
-    params: t.Optional[t.Dict[str, t.Optional[str]]] = None
+    params: Params = None
 
     # represents a mapping for embedded field elements to find. Values should represent the form
     # params for the specific site to input with.
-    fields: t.Dict[str, t.Optional[str]] = dataclasses.field(default_factory={
+    fields: Params = {
         "username": None,
         "password": None
-    })
+    }
 
     # represents headers to pass with response.
     # TODO: populate and more configurations
-    headers: t.Dict[str, str] = dataclasses.field(default_factory={
-        "User-Agent": "Mozilla/5.0"
-    })
+    headers: Params = None
 
     # if set, will not attach to an actual browser process to perform bruteforce
-    headless: bool = True
+    headless: bool = False
 
 
-    def init():
+    def __str__(self) -> str:
+        return f"{self.name}"
+
+
+    @classmethod
+    def parse_args(cls) -> argparse.Namespace:
+        """
+        Most of the configurations should be done as part of the plugin module itself,
+        but any changes during runtime that involve overriding parameters have options
+        implemented here.
+        """
+
+        # check if child classes already initialized and parsed arguments
+        if cls._args:
+            return cls._args
+
+        # check if child classes already initialized an argument parser with options
+        if not cls._parser:
+            parser: argparse.ArgumentParser = argparse.ArgumentParser(f"{str(cls)} standalone credential stuffing module")
+        else:
+            parser: argparse.ArgumentParser = cls._parser
+
+        parser.add_argument(
+            "--headless", action="store_true",
+            help="Execute the attack by without an actual browser or webdriver.",
+        )
+
+        """
+        parser.add_argument(
+            "--override_fields", type=json.loads, dest="override_fields",
+            help="Overrides the name of the username/password parameter fields in a dict format {'username': '', 'password': ''}.",
+        )
+
+        parser.add_argument(
+            "--override_params", type=json.loads, dest="override_params",
+            help="Overrides parameters sent as part of the HTTP request in a dict format.",
+        )
+
+        parser.add_argument(
+            "--override_headers", type=json.loads, dest="override_headers",
+            help="Overrides headers sent as part of the HTTP request in a dict format.",
+        )
+        """
+
+        # set parser, and finalize initialization in subclass
+        cls._parser = parser
+        return super().parse_args()
+
+
+    def init(self):
         """
         Initializes the proper browser for authentication based on configuration, and performs
         necessary error-checking.
         """
 
         # error if no field params are set.
-        if not all(self.fields.values()):
-            raise base.BruteException("no input parameters for user/pwd combo given for module.")
+        if not any(self.fields.values()):
+            raise BruteException("no input parameters for user/pwd combo given for module.")
 
         if self.headless:
 
@@ -64,16 +117,18 @@ class WebBruteforce(base.BruteBase):
             # configure before requesting
             cookies = mechanize.CookieJar()
             browser.set_cookiejar(cookies)
-            browser.addheaders = [(k, v) for k, v in self.headers.items()]
+
+            if self.headers is not None:
+                browser.addheaders = [(k, v) for k, v in self.headers.items()]
             browser.set_handle_refresh(False)
 
             # initialize as attribute, and open
             self.browser = browser
-            self.browser.open(self.url)
+            self.browser.open(self.address)
 
         else:
-            self.browser = selenium.webdriver.Firefox()
-            self.browser.get(self.url)
+            self.browser = webdriver.Firefox()
+            self.browser.get(self.address)
 
 
     def brute(self, username: str, pwd_guess: str) -> str:
@@ -92,10 +147,13 @@ class WebBruteforce(base.BruteBase):
         fast and default way to do any type of web-based bruteforcing.
         """
         self.browser.select_form(nr = 0)
-        self.browser.form[self.field["username"]] = username
-        self.browser.form[self.field["password"]] = pwd_guess
+        self.browser.form[self.fields["username"]] = username
+        self.browser.form[self.fields["password"]] = pwd_guess
         response = self.browser.submit()
-        return response.read()
+
+        # use bs4 to parse html and return title
+        html = bs4.BeautifulSoup(response.read(), "html.parser")
+        return html.title.text
 
 
     def _driver_brute(self, username: str, pwd_guess: str) -> str:
@@ -106,16 +164,16 @@ class WebBruteforce(base.BruteBase):
         """
 
         # find the username input field, and send keys
-        user_elem = self.browser.find_element_by_name(self.fields["username"])
+        user_elem = self.browser.find_element(By.NAME, self.fields["username"])
         user_elem.clear()
         user_elem.send_keys(self.username)
 
         # find the password input field, and send keys
-        pwd_elem = self.browser.find_element_by_name(self.fields["password"])
+        pwd_elem = self.browser.find_element(By.NAME, self.fields["password"])
         pwd_elem.clear()
         pwd_elem.send_keys(pwd_guess)
 
         # press return key to attempt to auth, and wait briefly
-        pwd_elem.send_keys(selenium.webdriver.common.keys.Keys.RETURN)
+        pwd_elem.send_keys(Keys.RETURN)
         time.sleep(2)
         return self.browser.title
