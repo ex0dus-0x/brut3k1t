@@ -19,6 +19,9 @@ class ProtocolBruteforce(BruteBase):
     when attempting to bruteforce against network-based protocols.
     """
 
+    # overrides from base
+    address: t.Optional[str] = None
+
     # default port the service should reside on
     port: int = dataclasses.field(default_factory=int)
 

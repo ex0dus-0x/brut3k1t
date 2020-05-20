@@ -19,19 +19,16 @@ from brute.core.protocol import ProtocolBruteforce
 
 
 @dataclasses.dataclass
-class SSH(ProtocolBruteforce):
+class Ssh(ProtocolBruteforce):
+
     name = "ssh"
-
-    # fallback address
-    address = "0.0.0.0"
-
-    # default common port
     port = 22
 
 
     @property
     def success(self) -> int:
         return 0
+
 
     def init(self):
         """
@@ -61,8 +58,8 @@ class SSH(ProtocolBruteforce):
 
 
 if __name__ == "__main__":
-    args = SSH.parse_args()
-    SSH(
+    args = Ssh.parse_args()
+    Ssh(
         address = args.address,
         username = args.username,
         wordlist = args.wordlist,
