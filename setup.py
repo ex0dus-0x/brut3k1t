@@ -2,7 +2,7 @@
 """
 setup.py
 
-    Installs brute as CLI application locally.
+    Installs brute as both a client library and CLI application locally.
 
 """
 
@@ -13,7 +13,7 @@ NAME = "brute"
 VERSION = "4.0"
 
 REPO = "https://github.com/ex0dus-0x/brute"
-DESC = "brute is a security-oriented framework for bruteforce/credential-stuffing attacks"
+DESC = "crowd-sourced credential stuffing engine built for security professionals"
 
 # Main setup method
 setuptools.setup(

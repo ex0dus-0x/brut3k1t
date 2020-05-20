@@ -19,7 +19,7 @@ from brute.core.web import WebBruteforce
 
 
 @dataclasses.dataclass
-class MODNAME(WebBruteforce):
+class MOD(WebBruteforce):
     name = "NAME"
     address = "https://yoururl.com"
 
@@ -43,8 +43,8 @@ class MODNAME(WebBruteforce):
 
 
 if __name__ == "__main__":
-    args = MODNAME.parse_args()
-    MODNAME(
+    args = MOD.parse_args()
+    MOD(
         username = args.username,
         wordlist = args.wordlist,
         delay = args.delay,

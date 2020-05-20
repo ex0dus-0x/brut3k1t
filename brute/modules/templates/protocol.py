@@ -20,7 +20,7 @@ from brute.core.protocol import ProtocolBruteforce
 
 
 @dataclasses.dataclass
-class MODNAME(ProtocolBruteforce):
+class MOD(ProtocolBruteforce):
     name = "NAME"
 
     address = ??
@@ -55,8 +55,8 @@ class MODNAME(ProtocolBruteforce):
 
 
 if __name__ == "__main__":
-    args = MODNAME.parse_args()
-    MODNAME(
+    args = MOD.parse_args()
+    MOD(
         address = args.address,
         username = args.username,
         wordlist = args.wordlist,

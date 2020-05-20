@@ -23,10 +23,10 @@ def main():
  | |_) | |  | |_| | |_ ___) |
  |_.__/|_|   \__,_|\__|____/
 
-    crowd-sourced bruteforce/credential stuffing framework.
+    crowd-sourced credential stuffing engine built for security professionals
 """)
 
-    parser = argparse.ArgumentParser(description="Security-oriented bruteforce/credential-stuffing framework")
+    parser = argparse.ArgumentParser(description="crowd-sourced credential stuffing engine")
 
     # defines the module management argument group to interact with attack modules.
     module = parser.add_argument_group("Module Management")
@@ -82,15 +82,20 @@ def main():
     if args.new_module:
         (modtype, name) = args.new_module.split("/")
         if not modtype in manager.modtypes:
-            logger.error("Module type `{}` not recognized!".format(modtype))
+            logger.error(f"Module type `{modtype}` not recognized!")
             exit(1)
 
-        manager.new_module(modtype, name)
+        path = manager.new_module(modtype, name)
+        logger.good(f"[*] Initialized new plugin module `{modtype}.{name}` at {path} [*]")
         exit(0)
 
     if args.add_module:
         modpath = os.path.abspath(args.add_module)
-        manager.add_module(modpath)
+        path = manager.add_module(modpath)
+        if path is None:
+            logger.error("[!] Could not add new plugin to local registry [!]")
+        else:
+            logger.good(f"[*] Added plugin module to local registry at {path} [*]")
         exit(0)
 
 
@@ -115,7 +120,7 @@ def main():
     # retrieve module from arguments
     _module = manager.get_module(args.module)
     if _module is None:
-        logger.error("[!] No module found with name `{}`".format(args.module))
+        logger.error(f"[!] No module found with name `{args.module}`")
 
     # initialize module with all parameters and run. Assume generic type and
     # use all arg params, let object figure it out.
