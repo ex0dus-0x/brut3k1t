@@ -7,41 +7,41 @@ setup.py
 """
 
 import os
-from setuptools import setup, find_packages
+import setuptools
 
 NAME = "brute"
 VERSION = "4.0"
+
 REPO = "https://github.com/ex0dus-0x/brute"
-DESC = """brute is a security-oriented tool for
-conducting bruteforce attacks against a multitude of protocols and services"""
+DESC = "brute is a security-oriented framework for bruteforce/credential-stuffing attacks"
 
 # Main setup method
-setup(
+setuptools.setup(
     name = NAME,
     version = VERSION,
     author = "ex0dus",
     description = DESC,
-    license = "GPLv3",
+    license = "MIT",
     url=REPO,
-    download_url='{}/archive/v{}'.format(REPO, VERSION),
-    packages = find_packages(),
+    download_url="{}/archive/v{}".format(REPO, VERSION),
+    packages = setuptools.find_packages(),
     entry_points = {
-        'console_scripts': [
-            'brute=brute.__main__:main'
+        "console_scripts": [
+            "brute=brute.__main__:main"
         ],
     },
     install_requires=[
-        'paramiko',
-        'selenium',
-        'xmpppy',
-        'requests'
+        "mechanize",
+        "paramiko",
+        "selenium",
+        "xmpppy",
     ],
     classifiers=[
-        'Development Status :: 1 - Planning',
-        'Intended Audience :: End Users/Desktop',
-        'Environment :: Console',
-        'Natural Language :: English',
-        'Programming Language :: Python',
-        'Programming Language :: Python :: 3',
+        "Development Status :: 1 - Planning",
+        "Intended Audience :: End Users/Desktop",
+        "Environment :: Console",
+        "Natural Language :: English",
+        "Programming Language :: Python",
+        "Programming Language :: Python :: 3",
     ]
 )
