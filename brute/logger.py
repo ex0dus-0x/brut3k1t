@@ -4,11 +4,10 @@ logger.py
     Defines interfaces used to consume and handle outputs in brute.
 """
 
-from enum import Enum
 from typing import Optional
 
 
-class Color(Enum):
+class Color:
     """
     defines an enumeration for color encodings
     """
@@ -39,15 +38,19 @@ class BruteLogger:
     # General program I/O
     ######################
 
+    @staticmethod
     def warn(input_str: str):
-	print("{}{}{}".format(Color.O, input_str, Color.W))
+        print("{}{}{}".format(Color.O, input_str, Color.W))
 
+    @staticmethod
     def error(input_str: str):
-	print("{}{}{}".format(Color.R, input_str, Color.W))
+        print("{}{}{}".format(Color.R, input_str, Color.W))
 
+    @staticmethod
     def good(input_str: str):
-	print("{}{}{}".format(Color.G, input_str, Color.W))
+        print("{}{}{}".format(Color.G, input_str, Color.W))
 
+    @staticmethod
     def output(color: Color, input_str: str, end_color = Color.W):
         print("{}{}{}".format(color, input_str, end_color))
 

@@ -12,7 +12,7 @@ import brute.manager
 import brute.logger
 
 # for our CLI, we just want to print normally.
-logger = BruteLogger(__name__)
+logger = brute.logger.BruteLogger(__name__)
 
 
 def main():
@@ -30,15 +30,15 @@ def main():
     # defines the module management argument group to interact with attack modules.
     module = parser.add_argument_group("Module Management")
     module.add_argument(
-        "-l", "--list_modules", dest="list_module"
+        "--list_modules", dest="list_modules",
         help="List out the currently available modules in the local registry."
     )
     module.add_argument(
-        "-a", "--add_module", dest="add_module",
+        "--add_module", dest="add_module",
         help="Add a new module to the local registry."
     )
     module.add_argument(
-        "-n", "--new_module", dest="new_module",
+        "--new_module", dest="new_module",
         help="Given a specifier (type/name), initializes a new module plugin script to current dir."
     )
 
@@ -71,16 +71,16 @@ def main():
     args = parser.parse_args()
 
     # startup our manager to interact with module registry
-    manager = BruteManager()
+    manager = brute.manager.BruteManager()
 
     # handle module-management arguments and exit after
     if args.list_modules:
-        print(manager.stats())
+        print(manager.stats)
         exit(0)
 
     if args.new_module:
         (modtype, name) = args.new_module.split("/")
-        if not modtype in ["web", "protocol", "misc"]:
+        if not modtype in manager.modtypes:
             logger.error("Module type `{}` not recognized!".format(modtype))
             exit(1)
 
