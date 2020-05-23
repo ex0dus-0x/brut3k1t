@@ -4,8 +4,11 @@ logger.py
     Defines interfaces used to consume and handle outputs in brute.
 """
 
+import os
+import enum
+import time
 
-class Color:
+class Color(enum.Enum):
     """
     defines an enumeration for color encodings
     """
@@ -28,17 +31,22 @@ class BruteLogger:
 
     def __init__(self, mod: str, log_level: int = 0, out_log: str = "brute.log"):
         """
+        :type mod: namespace logging info is being emitted from
         :type log_level:
-            0 = output all, no logging
+            0 = regular display
             1 = output errors
-            2 = output warnings
-            3 = output all, with logging
+            2 = output warnings and errors
+            3 = output all, with logging to file
 
-        :type out_log: path to file to write log to.
+        :type out_log: path to file to write log to if log_level == 3
         """
         self.mod = mod
         self.level = log_level
         self.out_log = out_log
+        self.time = time.time.start()
+
+    def log(callback: t.Callable[[str], None]) -> None
+        pass
 
     ######################
     # General program I/O
@@ -46,19 +54,19 @@ class BruteLogger:
 
     @staticmethod
     def warn(input_str: str):
-        print(f"{Color.O}{input_str}{Color.W}")
+        print(f"{Color.O.value}{input_str}{Color.W.value}")
 
     @staticmethod
     def error(input_str: str):
-        print(f"{Color.R}{input_str}{Color.W}")
+        print(f"{Color.R.value}{input_str}{Color.W.value}")
 
     @staticmethod
     def good(input_str: str):
         print(f"{Color.G}{input_str}{Color.W}")
 
     @staticmethod
-    def output(color: str, input_str: str, end_color: str = Color.W):
-        print(f"{color}{input_str}{end_color}")
+    def output(color: Color, input_str: str, end_color: Color = Color.W):
+        print(f"{color.value}{input_str}{end_color.value}")
 
     #########################
     # Authentication Handlers
@@ -69,3 +77,20 @@ class BruteLogger:
 
     def auth_fail(self, user, pwd):
         self.warn(f"[*] Username: {user} | [*] Password: {pwd} | Incorrect!\n")
+
+    #########################
+    # Logfile interaction
+    #########################
+
+    @staticmethod
+    def to_logfmt(input_dict: t.Dict[t.Any, t.Any]) -> str:
+        """
+        Helper for converting structed dicts into printable/loggable
+        logfmt strings.
+
+        :type input_dict: dict with any key-value type
+        """
+        logfmt: str = ""
+        for key, val in input_dict.items():
+            logfmt += f"{key}={val} "
+        return logfmt
