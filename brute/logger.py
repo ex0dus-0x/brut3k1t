@@ -4,13 +4,14 @@ logger.py
     Defines interfaces used to consume and handle outputs in brute.
 """
 
-import os
 import enum
 import time
+import typing as t
+
 
 class Color(enum.Enum):
     """
-    defines an enumeration for color encodings
+    Enumeration for color encodings for display.
     """
 
     W = "\033[0m"  # white (normal)
@@ -43,9 +44,9 @@ class BruteLogger:
         self.mod = mod
         self.level = log_level
         self.out_log = out_log
-        self.time = time.time.start()
+        self.time = time.time()
 
-    def log(callback: t.Callable[[str], None]) -> None
+    def log(self, callback: t.Callable[[str], None]) -> None:
         pass
 
     ######################
@@ -62,7 +63,7 @@ class BruteLogger:
 
     @staticmethod
     def good(input_str: str):
-        print(f"{Color.G}{input_str}{Color.W}")
+        print(f"{Color.G.value}{input_str}{Color.W.value}")
 
     @staticmethod
     def output(color: Color, input_str: str, end_color: Color = Color.W):

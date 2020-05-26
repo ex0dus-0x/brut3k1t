@@ -39,14 +39,16 @@ class BruteBase:
     # address to the specific target being tested
     address: dataclasses.InitVar[str] = None
 
-    # defines a combo list, which is a file with a combined key value pair of usernames and passwords. This
-    # should be used primarily for credential stuffing unique credentials, as it's more traditionally done.
+    # defines a combo list, which is a file with a combined key value pair of usernames and
+    # passwords. This should be used primarily for credential stuffing unique credentials,
+    # as it's more traditionally done.
     combos: t.Optional[str] = None
     _combo_path: str = dataclasses.field(init=False, repr=False)
     _combos_dict: t.Dict[str, str] = dataclasses.field(init=False, repr=False)
 
     # target username, or any fixed identifier (ie hash) necessary for bruteforcing. When called,
-    # username is checked to be a single username, a comma-seperated list of usernames, or a path to a file.
+    # username is checked to be a single username, a comma-seperated list of usernames,
+    # or a path to a file.
     username: t.Optional[str] = None
     _username_path: t.Optional[str] = dataclasses.field(init=False, repr=False)
     _usernames: t.List[str] = dataclasses.field(init=False, repr=False)
@@ -97,7 +99,7 @@ class BruteBase:
             "-c",
             "--combo_list",
             dest="combo_list",
-            help=""
+            help="Path to combination list (--username and --wordlist will be ignored).",
         )
         parser.add_argument(
             "-u",
@@ -144,7 +146,7 @@ class BruteBase:
         """
 
         if not os.path.isfile(path):
-            raise BruteError("combo path is not valid")
+            raise BruteException("combo path is not valid")
 
         # initialize combo dict
         self._combo_dict: t.Dict[str, str] = {}
@@ -152,22 +154,23 @@ class BruteBase:
         # initialize path
         self._combo_path: str = os.path.abspath(path)
         with open(self._combo_path, "r") as combofile:
-            self._combo_dict += { line.split(":")[0]  : line.split(":")[1]
-                                  for line in combofile.readlines() }
+            for line in combofile.readlines():
+                user, pwd = line.split(":")
+                self._combo_dict[user] = pwd
 
     @property  # type: ignore
-    def username(self) -> t.Union[str, List[str]]:
+    def username(self) -> t.Union[str, t.List[str]]:
         """
         When username property is called, the path to username file is returned if available,
         otherwise the list of usernames
         """
-        if hashattr(self, "_username_path"):
+        if hasattr(self, "_username_path"):
             return self._username_path
 
         return self._usernames
 
     @username.setter
-    def username(self, username: str) -> None:
+    def username(self, username: t.Optional[str]) -> None:
         """
         Instantiates username from either a single username input, a comma-seperated list,
         or a path to a file.
@@ -175,8 +178,12 @@ class BruteBase:
         :type username: represents input to be parsed
         """
 
+        # skip if none, since combos list must be set
+        if not username:
+            return
+
         # initialize usernames list
-        self._usernames: List[str] = []
+        self._usernames: t.List[str] = []
 
         if os.path.isfile(username):
             self._username_path = os.path.abspath(username)
@@ -194,12 +201,18 @@ class BruteBase:
         return self._wordlist_path
 
     @wordlist.setter
-    def wordlist(self, path: str) -> None:
+    def wordlist(self, path: t.Optional[str]) -> None:
         """
         Instantiates the wordlist pool from a path, whether a single file or dir.
 
         :type path: file or directory inode with wordlists
         """
+
+        # skip if none, since combo list must be set
+        if not path:
+            return
+
+        # TODO: check for HTTP link
 
         # initialize path to wordlists for display purposes
         self._wordlist_path = os.path.abspath(path)
@@ -212,7 +225,7 @@ class BruteBase:
             for filename in os.listdir(path):
                 if os.path.isfile(filename):
                     with open(os.path.join(path, filename), "r") as wordfile:
-                        self._wordlist += wordfile.readlines()
+                        self._wordlist += wordfile.readlines().strip("\n")
 
         # otherwise read file normally
         elif os.path.isfile(path):
@@ -279,11 +292,28 @@ class BruteBase:
         except NotImplementedError:
             self.log.warn("[*] Skipping the sanity-check, not implemented [*]")
 
+        # if the combos argument is specified, run against those permutations instead
+        if len(self._combo_dict) != 0:
+            for user, pwd in self._combo_dict.items():
+                try:
+                    resp = self.brute(user, pwd)
+                    if self.success == resp:
+                        self.log.auth_success(user, pwd)
+                    else:
+                        self.log.auth_fail(user, pwd)
+
+                    # sleep and then request again
+                    time.sleep(self.delay)
+
+                except Exception as error:
+                    raise BruteException(f"Caught runtime exception: `{error}`")
+
+            return
+
         # bruteforce execution loop: send a single authentication request per word, and
         # check to see if the strings set in success/fail are in the response.
-        for _word in self._wordlist:
+        for word in self._wordlist:
             try:
-                word: str = _word.strip("\n")
                 resp = self.brute(self.username, word)  # type: ignore
                 if self.success == resp:
                     self.log.auth_success(self.username, word)
