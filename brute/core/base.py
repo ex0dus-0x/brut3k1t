@@ -159,7 +159,7 @@ class BruteBase:
                 self._combo_dict[user] = pwd
 
     @property  # type: ignore
-    def username(self) -> t.Union[str, t.List[str]]:
+    def username(self) -> t.Union[t.Optional[str], t.List[str]]:
         """
         When username property is called, the path to username file is returned if available,
         otherwise the list of usernames
@@ -225,7 +225,7 @@ class BruteBase:
             for filename in os.listdir(path):
                 if os.path.isfile(filename):
                     with open(os.path.join(path, filename), "r") as wordfile:
-                        self._wordlist += wordfile.readlines().strip("\n")
+                        self._wordlist += wordfile.readlines()
 
         # otherwise read file normally
         elif os.path.isfile(path):
@@ -295,6 +295,7 @@ class BruteBase:
         # if the combos argument is specified, run against those permutations instead
         if len(self._combo_dict) != 0:
             for user, pwd in self._combo_dict.items():
+                pwd = pwd.strip("\n")
                 try:
                     resp = self.brute(user, pwd)
                     if self.success == resp:
@@ -313,6 +314,7 @@ class BruteBase:
         # bruteforce execution loop: send a single authentication request per word, and
         # check to see if the strings set in success/fail are in the response.
         for word in self._wordlist:
+            word = word.strip("\n")
             try:
                 resp = self.brute(self.username, word)  # type: ignore
                 if self.success == resp:
